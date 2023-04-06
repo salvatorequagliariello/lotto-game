@@ -129,3 +129,5 @@ class Ticket {
         return ticket;
     }
 };
+
+module.exports = Ticket;
