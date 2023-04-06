@@ -62,10 +62,4 @@ async function citiesQuestion() {
         };
 };
 
-async function show() {
-    const number = await citiesQuestion();
-    console.log(number);
-}
-show();
-
 module.exports = citiesQuestion;
