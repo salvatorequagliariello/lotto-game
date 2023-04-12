@@ -9,7 +9,7 @@ on:
       - 'main'
 
 jobs:
-  tests:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,8 +19,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install Dependencies
-        run: npm install
-        run: npm ci
-      - name: Run Tests on Jest
-        run: npm test
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test
