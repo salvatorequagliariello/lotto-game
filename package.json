@@ -1,0 +1,22 @@
+{
+  "name": "lotto-game",
+  "version": "1.0.0",
+  "description": "A showcase OOP project for the Programming Course by TomorrowDevs, a full replica of an Italian Lotto System comprising the Ticket generations, an Extraction System and Prize calculation.",
+  "main": "main.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/salvatorequagliariello/lotto-game.git"
+  },
+  "author": "Salvatore Quagliariello",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/salvatorequagliariello/lotto-game/issues"
+  },
+  "homepage": "https://github.com/salvatorequagliariello/lotto-game#readme"
+}
