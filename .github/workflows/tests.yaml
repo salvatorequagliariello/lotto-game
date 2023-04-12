@@ -21,6 +21,8 @@ jobs:
           node-version: lts/*
           cache: 'npm'
       - name: Install Dependencies
-        run: npm install
+        run: |
+          npm install
+          npm ci
       - name: Run Tests on Jest
         run: npm test
