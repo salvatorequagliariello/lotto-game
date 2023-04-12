@@ -48,13 +48,13 @@ class LottoGame {
         if ((startQuestion === true) && (this.#tickets.length >= 1)) {
             const printedTickets = await this.#printTickets(this.#tickets);      
             console.log(printedTickets);
-            return; 
+            return this.#tickets;
         } else {
             console.log(`It seems like you don't have any Lotto Ticket!`);
             const tickets = await this.#ticketGenerator();
             const printedTickets = await this.#printTickets(tickets);
             console.log(printedTickets);
-            return;
+            return tickets;
         }
     }
 
