@@ -9,7 +9,11 @@ const typeOfTicket = require(`./utils/q-type-of-ticket`);
 const nOfTickets = require(`./utils/q-number-of-tickets`);
 const ticketNumbers = require(`./utils/q-numbers`);
 const citiesTicket = require(`./utils/q-cities`);
+const draw = require(`./lotto-draw`);
+const printDraw = require(`./utils/print-lotto-draw`);
+const drawQuestion = require(`./utils/q-lotto-draw`);
 const Ticket = require(`./ticket`);
+const lottoDraw = require('./lotto-draw');
 
 /**
  * @class The class LottoGame, is the reproduction of an instance of the Italian Lotto. It's possible to start
@@ -28,6 +32,9 @@ class LottoGame {
         this.#tickets = ticketObj;
     }
     
+    #draw = draw;
+    #printDraw = printDraw;
+    #lottoDrawAsyncQ = drawQuestion;
     #nOfTicketsAsyncQ = nOfTickets;
     #typeOfTicketAsyncQ = typeOfTicket;
     #numbersToPlayAsyncQ = ticketNumbers;
@@ -48,14 +55,51 @@ class LottoGame {
         if ((startQuestion === true) && (this.#tickets.length >= 1)) {
             const printedTickets = await this.#printTickets(this.#tickets);      
             console.log(printedTickets);
-            return this.#tickets;
+
+            const drawQuestion = await this.#lottoDrawAsyncQ();
+            if (drawQuestion === true) {
+                const draw = await this.#draw(this.#tickets);
+                const drawString = await this.#printDraw(draw);
+                console.log(drawString);
+                return draw;
+            } else {
+                console.log(`You chose to not participate in the Lotto Draw!`);
+                return this.#tickets;
+            };
         } else {
-            console.log(`It seems like you don't have any Lotto Ticket!`);
+            console.log(`It seems like you don't have any Lotto Tickets!`);
             const tickets = await this.#ticketGenerator();
             const printedTickets = await this.#printTickets(tickets);
             console.log(printedTickets);
-            return tickets;
+
+            const drawQuestion = await this.#lottoDrawAsyncQ();
+            if (drawQuestion === true) {
+                const draw = await this.#draw(tickets);
+                const drawString = await this.#printDraw(draw);
+                console.log(drawString);
+                return draw;
+            } else {
+                console.log(`You chose to not participate in the Lotto Draw!`);
+                return tickets;
+            }
         }
+    }
+
+    /**
+     * Allow the user to partecipate in a draw with his own Lotto Tickets.
+     * Require that the LottoGame Object applied has been declared with Ticket Objects passed in the Constructor. 
+     * @returns {Promise<string>} Returns a String containing the results of the Draw and possible winning Tickets.
+     */
+    async partecipateDraw() {
+        const tickets = this.#tickets;
+
+        if (this.#tickets.length === 0) throw new TypeError(`It seems like you don't have any Lotto Tickets! Please, buy a Ticket and try again!`);
+
+        const draw = await this.#draw(tickets);
+        const drawString = await this.#printDraw(draw);
+
+        console.log(drawString);
+        return drawString;
     }
 
     /**
