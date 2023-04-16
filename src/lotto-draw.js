@@ -37,13 +37,16 @@ async function lottoDraw(tickets, givenDrawnNumbers) {
         
         for (let city of common) {
             const numbers = drawnNumbers[city].filter(number => betDetails[city].indexOf(number) !== -1);
-            if (numbers.length === winningCombination) {
+            if (numbers.length >= winningCombination) {
                 winningTicketDetails.winningNumbers = numbers;
                 winningTicketDetails.ticket = ticket; 
             }
         };
         
-        if (Object.keys(winningTicketDetails).length > 0) winningTickets.push(ticket);
+        if (Object.keys(winningTicketDetails).length > 0) {
+            winningTickets.push(ticket);
+            continue;
+        };
     }
     
     return {winningTickets, drawnNumbers};
