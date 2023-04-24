@@ -4,52 +4,86 @@
  * @module lotto-draw.js
  */
 
+
 /**
- * The Draw System of the project. Generates a Draw Object and compare it with the numbers and cities in the 
- * Ticket Objects passed. Uses a loop to compare every number of the ticket with every number of the draw in the shared cities.
- * If the number of played winning numbers equals the number required  by the winning combination on the ticket, the ticket itself
- * is pushed to the `winningTickets` array.
- * @async
- * @param {Array<Object>} tickets Accepts an Array of Ticket Objects.
- * @param {Object} [givenDrawnNumbers] Accept a given Draw Object, mainly used to test the function.
- * @returns {Promise<Object>} Returns a Promise, that once fulfilled, returns an Object containing the draw itself and the winning tickets.
+ @class The Class we use to generate Draw Objects.
  */
-async function lottoDraw(tickets, givenDrawnNumbers) {
-    if (typeof tickets !== `object` || tickets.length == 0) {
-        throw new TypeError(`Please, enter valid tickets!`);
-    };
-
-    const cities = [`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`];
-    const drawnNumbers = typeof givenDrawnNumbers === `object` ? givenDrawnNumbers : {};
-    const winningTickets = [];
-
-    if (Object.keys(drawnNumbers).length !== 10) {
-        cities.forEach(ruota => drawnNumbers[ruota] = Array.from({length: 5}, () => Math.floor(Math.random() * (90 - 1 + 1)) + 1));
-    };
-
-    for (let ticket of tickets) {
-        const winningTicketDetails = {};
-        const winningCombination = ticket.type[`winningNumbers`];
-        const betDetails = {};
-        ticket.cities.forEach(city => betDetails[city] = ticket.numbers);
-        
-        const common = Object.keys(drawnNumbers).filter(cities =>  Object.keys(betDetails).indexOf(cities) !== -1);
-        
-        for (let city of common) {
-            const numbers = drawnNumbers[city].filter(number => betDetails[city].indexOf(number) !== -1);
-            if (numbers.length >= winningCombination) {
-                winningTicketDetails.winningNumbers = numbers;
-                winningTicketDetails.ticket = ticket; 
-            }
-        };
-        
-        if (Object.keys(winningTicketDetails).length > 0) {
-            winningTickets.push(ticket);
-            continue;
-        };
+class LottoDraw {
+    #cities; 
+    #numbersToDraw;
+    #maxNumberDraw;
+    #minNumberDraw;
+    #init;
+    /**
+     * The arguments passed as parameters will be evaluated in the .#drawExe private method, then used to init the object. Declaring a Draw
+     * Object with the wrong type of arguments will lead to a TypeError.
+     * @param {Array<String>} cities An array containing lines name for our Draw.
+     * @param {Number} numbersToDraw The quantity of numbers to draw for every line passed.
+     * @param {Number} maxNumberDraw The greatest number that can be draw (can't be zero).
+     * @param {Number} minNumberDraw The minimum number that can be draw (can't be zero and can't be greater than the prev parameter).
+     */
+    constructor(cities, numbersToDraw, maxNumberDraw, minNumberDraw) {
+        this.#cities = cities;
+        this.#numbersToDraw = numbersToDraw;
+        this.#maxNumberDraw = maxNumberDraw;
+        this.#minNumberDraw = minNumberDraw;
+        this.#init = this.#drawExe();
     }
+
+    /**
+     * A private Method used in the Constructor to initialize the Draw Object declared. Perform a validity check on all of the passed Arguments, then
+     * proceeds to create object properties. The `this.#cities` members will be used as properties, and their value will be an Array of `this.#numbersToDraw` length
+     * composed of random numbers within a range of `this.#minNumberDraw` and `this.#maxNumberDraw`.
+     */
+    #drawExe() {
+        if(!Array.isArray(this.#cities) || !this.#cities.length) {
+            throw new TypeError(`Please, enter a valid list of cities!`);
+        }
+
+        if((this.#numbersToDraw <= 0) || (isNaN(this.#numbersToDraw)) || (!Number.isInteger(this.#numbersToDraw))) {
+            throw new TypeError(`Please, enter a valid number of numbers to draw!`);
+        }
+
+        if((this.#maxNumberDraw <= 0) || (isNaN(this.#maxNumberDraw)) || (!Number.isInteger(this.#maxNumberDraw))) {
+            throw new TypeError(`Please, enter a valid maximum number for your draw!`);
+        }
+
+        if((this.#minNumberDraw <= 0) || (isNaN(this.#minNumberDraw)) || (!Number.isInteger(this.#minNumberDraw)) || (this.#minNumberDraw > this.#maxNumberDraw)) {
+            throw new TypeError(`Please, enter a valid minimum number for your draw!`);
+        }
+
+        this.#cities.forEach(city => this[city] = Array.from({length: this.#numbersToDraw}, () => Math.floor(Math.random() * (this.#maxNumberDraw - this.#minNumberDraw + 1)) + this.#minNumberDraw))
+    }
+
+    /**
+     * Method used to print a Draw Object. Returns a nice ASCII representation of a draw, containing made up of an upper part
+     * (the Lotto logo and the day date) and a main part (the Ruote and their drawn numbers).
+     * The function is almost totally built on the `.repeat` String method.
+     * The output string is dynamically generated and follows the applied Object Properties length.
+     * @returns {String} Returns a visual representation of the Draw Object.
+     */
+    print() {
+        const drawnNumbers = this;
+        const drawingWidth = Object.keys(drawnNumbers)[0].toString().length + Object.values(drawnNumbers)[0].join(` - `).length + 30;
+        const block = `\█`;
+        const upperEdge= `${block.repeat(drawingWidth)}\n${block}${` `.repeat(drawingWidth - 2)}${block}\n`;
+        const lowerEdge = `${block}${` `.repeat(drawingWidth - 2)}${block}\n${block.repeat(drawingWidth)}`;
+        const breakLine = `${block}${`\═`.repeat(drawingWidth - 2)}${block}\n${block}${` `.repeat(drawingWidth - 2)}${block}\n`;
+        const flatBreakLine = `${block}${`\━`.repeat(drawingWidth - 2)}${block}\n${block}${` `.repeat(drawingWidth - 2)}${block}\n`;
+        const lottoLineString = `${block}${` `.repeat(2)}L O T T O${` `.repeat(drawingWidth - 25)}Estrazione${` `.repeat(2)}${block}\n`;
+        
+        let drawnNumbersString = ``;
+        for (let ruota in drawnNumbers) {
+            // @ts-ignore
+            const numbersString = `${drawnNumbers[ruota].join(` - `)}${` `.repeat(2)}`;
+            const ruotaNameString = `${block}${` `.repeat(2)}${ruota.toUpperCase()}${` `.repeat((drawingWidth - 4 - numbersString.length) - ruota.length)}${numbersString}${block}\n`;
+            drawnNumbersString += ruotaNameString + flatBreakLine;
+        };
     
-    return {winningTickets, drawnNumbers};
+        const lottoDrawCompleteString = upperEdge + lottoLineString + breakLine + drawnNumbersString + lowerEdge;
+        const outputString = lottoDrawCompleteString;
+        return outputString;
+    }
 };
 
-module.exports = lottoDraw;
+module.exports = LottoDraw;
