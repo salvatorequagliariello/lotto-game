@@ -17,7 +17,7 @@ async function nOfTicketsQuestion() {
         {
             type: 'select',
             name: 'numberOfTickets',
-            message: `How many Lotto tickets would you like to buy?`,
+            message: `It seems like you don't have any Tickets. How many Lotto tickets would you like to buy?`,
             choices: [
                 { title: '1', value: 1},
                 { title: '2', value: 2},
@@ -27,7 +27,7 @@ async function nOfTicketsQuestion() {
             ],
             onRender(kleur) {
                 // @ts-ignore
-                this.msg = kleur.green('How many Lotto tickets would you like to buy?');
+                this.msg = kleur.green(`It seems like you don't have any Tickets. How many Lotto tickets would you like to buy?`);
             }
         }]);
 
