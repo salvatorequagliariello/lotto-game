@@ -23,13 +23,17 @@ class Ticket {
      * @param {string} cities The italian Lotto has a `Ruota` based Drawing system. It is composed by up to 10 Italian Cities. The user can choose can choose as many 
      * as he wants, to put his bet on. It's possibile to choose `Tutte` to place the bet on every one of them.
      */
-    constructor(type, nOfNumbers, cities){
+
+constructor(type, nOfNumbers, cities, bet) {
         /** @constant {String} */
         this.type = this.#typeValidation(type);
         /** @constant {Array<Number>} */
         this.numbers = this.#numbersValidation(nOfNumbers);
         /** @constant {Array<String>}*/
         this.cities = this.#cityValidation(cities);
+        this.bet = this.#betValidation(bet);
+        this.id = +(Array.from({length: 4}, () => Math.floor(Math.random() * (9 - 1 + 1)) + 1).join(``));
+        this.wonAmount = -1;
     }
     
     /**
@@ -92,9 +96,26 @@ class Ticket {
         };
     }
 
+  /**
+     * A private function, used to validate the `bet` argument passed into the Contructor. Checks if the amount Number is valid, if it is an integer 
+     * and if it is greater than 0 and less than 200, the greatest amount accepted from the Italian Lotto. Then, proceeds to round it to the nearest valid value.
+     * @param {Number} bet How much we would like to bet. 
+     * @returns {Number} 
+     */
+    #betValidation(bet) {
+        if((bet <= 0) || (bet > 200) || (isNaN(bet))) {
+            throw new TypeError(`Please, enter a valid bet! The total bet must be at least €1.00, up to a maximum of €200.00 (in €0.50 increments). Every entered value that does not follow this rule, will be rounded to the nearest valid value.`);
+        }
+
+        const betAmount = +((bet - (+(bet % 0.50).toFixed(2))).toFixed(2));
+        return betAmount;
+    }
+
     /**
      * Print a nice ASCII representation of the Ticket. The output is dynamically generated String, containing information on the 
      * created Ticket. The function is based on the `.repeat` String method, to create every single line of the output.
+     * The output string changes if the Ticket is a winning one, showing on what Ruota and on what numbers the Ticket has won,
+     * and the won amount in Euro.
      * @returns {string}
      */
     print() {
@@ -103,7 +124,7 @@ class Ticket {
         const breakLine = `${block}${`\═`.repeat(ticketWidth - 2)}${block}\n${block}${` `.repeat(ticketWidth - 2)}${block}\n`;
         const breakBlank = `${block}${` `.repeat(ticketWidth - 2)}${block}\n`;
         const upperEdge = `${block.repeat(ticketWidth)}\n${block}${` `.repeat(ticketWidth - 2)}${block}\n`;
-        const lottoLogo = `${block}${` `.repeat((ticketWidth - 12) / 2)}L O T T O${` `.repeat((ticketWidth - 10) / 2)}${block}\n`;
+        const lottoLogo = `${block}${` `.repeat(2)}L O T T O${` `.repeat(ticketWidth - (this.id.toString().length + 28))}BIGLIETTO N. ${this.id.toString()}${` `.repeat(2)}${block}\n`;
         const lowerEdge = `${block}${` `.repeat(ticketWidth - 2)}${block}\n${block.repeat(ticketWidth)}`;
 
         const userNumbersString = `${this.numbers.join(` - `)}`;
@@ -118,13 +139,27 @@ class Ticket {
             citiesOnTicket = `${block}${` `.repeat(2)}${userCitiesFirstString}${` `.repeat((ticketWidth - userCitiesFirstString.length) - 6)}${` `.repeat(2)}${block}\n${block}${` `.repeat(2)}${userCitiesSecondString}${` `.repeat((ticketWidth - userCitiesSecondString.length) - 6)}${` `.repeat(2)}${block}\n`;
         };
 
+        const betAmountString = `${block}${` `.repeat(2)}IMPORTO GIOCATA${` `.repeat(ticketWidth - (this.bet.toString().length + 22))}€${this.bet}${` `.repeat(2)}${block}\n`;
+
+        let winningSection = ``;
+        if (this.hasOwnProperty(`winningDetails`)) {
+            // @ts-ignore
+            const wNumbersString = this.winningDetails[`numbers`].join(` - `);
+            // @ts-ignore
+            const wCityString = this.winningDetails[`city`].toString().toUpperCase();
+            const winStringHeader = `${block}${` `.repeat(2)}GIOCATA VINCENTE SU${` `.repeat(ticketWidth - 25)}${` `.repeat(2)}${block}\n`;
+            const wString = `${block}${` `.repeat(2)}${wCityString}${` `.repeat(ticketWidth - (wCityString.length + wNumbersString.length + 6))}${wNumbersString}${` `.repeat(2)}${block}\n`;
+            const wAmountString = `${block}${` `.repeat(2)}VINCITA${` `.repeat(ticketWidth - (this.wonAmount.toString().length + 14))}€${this.wonAmount}${` `.repeat(2)}${block}\n`
+            winningSection += `${breakLine}${winStringHeader}${wString}${wAmountString}${breakBlank}`;
+        };
+
         const userTypeBillString = `${this.type.bill.toUpperCase()}`;
         const typeOfBillSection = `${block}${` `.repeat(2)}SORTE${` `.repeat((ticketWidth - userTypeBillString.length) - 11)}${userTypeBillString}${` `.repeat(2)}${block}\n`;
 
         const upperSection = upperEdge + lottoLogo + breakLine;
-        const infoSection = playedNumbersSection + numbersOnTicket + breakBlank + citiesSection + citiesOnTicket + breakBlank;
+        const infoSection = playedNumbersSection + numbersOnTicket + breakBlank + citiesSection + citiesOnTicket + breakBlank + betAmountString + breakBlank;
         const lowerSection = breakLine + typeOfBillSection + lowerEdge;
-        const ticket = upperSection + infoSection + lowerSection;
+        const ticket = upperSection + infoSection + winningSection  + lowerSection;
 
         return ticket;
     }
