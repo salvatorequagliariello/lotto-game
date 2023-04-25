@@ -8,6 +8,10 @@ A **NodeJS CLI Lottery App**, based on the **Italian Lotto®** System. The App i
   - [The LottoDraw Class](https://github.com/salvatorequagliariello/lotto-game#the-lottodraw-class)
   - [The PrizeCalculator Function](https://github.com/salvatorequagliariello/lotto-game#the-prizecalculator-function)
   - [The LottoGame Class](https://github.com/salvatorequagliariello/lotto-game#the-lottogame-class)
+- [How to play](https://github.com/salvatorequagliariello/lotto-game#how-to-play-video_game)
+  - [How to generate Tickets](https://github.com/salvatorequagliariello/lotto-game#how-to-generate-tickets)
+  - [How to navigate the menu](https://github.com/salvatorequagliariello/lotto-game#how-to-navigate-the-menu-pager)
+  
 ---
 ## Some information about Lotto  :slot_machine:
 Italian Lotto is a lottery game whose history dates back hundreds of years. Results consist of ten regional draws and a national draw, with five numbers drawn from each wheel. 
@@ -229,11 +233,64 @@ gameInstance.start();
 ```
 ------
 ## How to play :video_game:
-If the LottoGame object has been declared with at least one Ticket Object passed into the Contructor, then jump to .
+If the LottoGame object has been declared with at least one Ticket Object passed into the Contructor, then jump to *[How to navigate the menu](https://github.com/salvatorequagliariello/lotto-game#how-to-navigate-the-menu-pager)*.
 <br>
 ### How to generate Tickets
 - Once the **repository** has been cloned or downloaded, and all necessary **dependencies** installed, all the user has to do to start a game istance is  open the repository in his terminal, and then launch the `node main.js` command.
 
   ![start a new game istance](https://user-images.githubusercontent.com/109867120/231706680-70db9e38-eed4-4ead-ae88-8611a6fb094f.png)
   
+- If the instance has been started with no Tickets passed into the Contructor, the first thing the software will ask will be the Number of [Tickets](https://github.com/salvatorequagliariello/lotto-game#the-ticket-class) to generate.
+
+  ![Schermata 2023-04-25 alle 16 51 07](https://user-images.githubusercontent.com/109867120/234316076-22581264-72dd-401c-ab69-7da64fa96385.png)
+
+- Let's pretend we only want to buy **1** Ticket (**as can be seen it's possible to generate up to 5 Tickets**). Now we have to decide the amount of our Bet! It's posbbile to enter value from 1 up to 200, with increments of 0.50, but i think 5 would be the right amount for our Bet!
+  
+  ![Schermata 2023-04-25 alle 16 53 53](https://user-images.githubusercontent.com/109867120/234317313-6f6ad16c-fe35-4a49-9711-6f6d7e81fc54.png)
+
+- Then we have to choose the type of winning combination we would like to place our virtual bet on (see *[The Ticket Class](https://github.com/salvatorequagliariello/lotto-game#the-ticket-class)* for  more info).
+  
+  ![Schermata 2023-04-25 alle 16 58 27](https://user-images.githubusercontent.com/109867120/234318107-6d950b3d-d03b-417b-8b51-a85a5f7924e5.png)
+  
+- It's time to decide on how many numbers we would like to place our virtual bet on. Having chosen "**Terno**" as winning combination, the prompt 
+  will only allow me to choose from numbers greater than 3!
+  
+  ![Schermata 2023-04-25 alle 17 01 06](https://user-images.githubusercontent.com/109867120/234319068-0a4739af-76d4-4a2d-a422-c833fb2783cb.png)
+
+- One more last thing to do before we can finally have our Ticket is to choose on wich "**Ruota**" we would like to bet.
+  
+  ![Schermata 2023-04-25 alle 17 03 08](https://user-images.githubusercontent.com/109867120/234319701-1df73593-db7b-45b4-9bb1-515c448b5a49.png)
+  
+- Answering "Yes", we'll place the bet on every "Ruota".
+- Answering "No", we'll have the possibility to choose our favorite "Ruote" (it's possible to select more than on "Ruota", see *[The Ticket Class](https://github.com/salvatorequagliariello/lotto-game#the-ticket-class)* for  more info).
+
+  ![Schermata 2023-04-25 alle 17 11 21](https://user-images.githubusercontent.com/109867120/234322149-cbc2a19a-b213-4c61-ae28-4fb94c867416.png)
+
+Now that we have our precious Ticket, we can finally see what we can do with it!
+
 ### How to navigate the menu :pager:
+
+The main menu is dynamic and its prompts will change according to what we already done!. <br>
+With at least one Ticket generated (or passed into the Constructor), we have two options, we can choose to partecipate to a Draw (generate a [Draw](https://github.com/salvatorequagliariello/lotto-game#the-lottodraw-class) Object) or see our Tickets (print them)!
+
+  ![Schermata 2023-04-25 alle 17 15 06](https://user-images.githubusercontent.com/109867120/234323784-53b07e74-f25f-45fd-bfa9-8674fb7f0211.png)
+  
+   - Choosing to see our Tickets will print our Tickets in the console:
+
+     ![Schermata 2023-04-25 alle 17 19 23](https://user-images.githubusercontent.com/109867120/234324353-2b27d18b-eb6a-455c-9f3d-95782d30ca38.png)
+
+   - While choosing to partecipate to a Draw will generate a Draw Object and let us check for winning numbers in our Tickets (this will be the starting point of the software if the LottoGame Object has      been declarated passing at least one Ticket and a Draw Object)!
+    
+     ![Schermata 2023-04-25 alle 17 31 25](https://user-images.githubusercontent.com/109867120/234327823-ae84596b-8c67-469f-a2b8-681e346d7b5a.png)
+
+  - Before we search for winning numbers, let's see the draw results ('See the draw results' line)!
+    
+    ![Schermata 2023-04-25 alle 17 34 40](https://user-images.githubusercontent.com/109867120/234328757-1e9aa026-5401-4808-9071-7a031e787735.png)
+
+  - Well to me those seems some pretty lucky numbers! It's time to check if we have some winning numbers ('Check if my Ticket won.' line)!
+    
+    ![Schermata 2023-04-25 alle 17 38 25](https://user-images.githubusercontent.com/109867120/234329761-83a9541b-602a-4c5c-8cff-99c279995919.png)
+
+  - Oh, no! I didn't win anything! But i'm sure you'll be luckier!
+  
+Download the project and try your luck! :moneybag:
