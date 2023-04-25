@@ -228,3 +228,12 @@ const gameInstance = new LottoGame();
 gameInstance.start();
 ```
 ------
+## How to play :video_game:
+If the LottoGame object has been declared with at least one Ticket Object passed into the Contructor, then jump to .
+<br>
+### How to generate Tickets
+- Once the **repository** has been cloned or downloaded, and all necessary **dependencies** installed, all the user has to do to start a game istance is  open the repository in his terminal, and then launch the `node main.js` command.
+
+  ![start a new game istance](https://user-images.githubusercontent.com/109867120/231706680-70db9e38-eed4-4ead-ae88-8611a6fb094f.png)
+  
+### How to navigate the menu :pager:
