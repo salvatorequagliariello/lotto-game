@@ -9,130 +9,155 @@ const typeOfTicket = require(`./utils/q-type-of-ticket`);
 const nOfTickets = require(`./utils/q-number-of-tickets`);
 const ticketNumbers = require(`./utils/q-numbers`);
 const citiesTicket = require(`./utils/q-cities`);
-const draw = require(`./lotto-draw`);
-const printDraw = require(`./utils/print-lotto-draw`);
-const drawQuestion = require(`./utils/q-lotto-draw`);
+const betAmountQuestion = require(`./utils/q-bet-amount`);
+const prizeCalculator = require(`./prize-calculator`);
+const printWin = require(`./utils/print-win`);
+const mainMenu = require(`./utils/q-main-menu`);
+const LottoDraw = require(`./lotto-draw`);
 const Ticket = require(`./ticket`);
-const lottoDraw = require('./lotto-draw');
 
 /**
- * @class The class LottoGame, is the reproduction of an instance of the Italian Lotto. It's possible to start
- * an istance of the Class and generate, trough a guided process, new tickets, or even to use your own
- * tickets object, passing them as arguments in the instance declaration.
- * The Class is capable to show the passed or generated Tickets, thanks to the `.#printTickets` privat method.
+ * Use this Class to generate a new istance of Lotto game. A Lotto Game Object is capable to generate new Ticket Objects, new Draws and to check for winning Tickets. 
+ * It's possible to use a Lotto Object through its CLI or calling its methods in the text editor.
  */
 class LottoGame {
     /**@const @property*/
-    #tickets;
+    #doneDraw;
+    /**@const @property*/
+    #doneCheckPrize;
+    /**@const @property*/
+    #hasWinningTickets
     /**
-     * The only property of the Class is private, to avoid any unintentional event to modify the passed Tickets.
-     * @param  {...Object} ticketObj Accept Ticket Objects, composed by a Type, a certain quantity of Numbers, and an Array of `Ruote` Strings.
+     * @param {Array<Object>} [tickets] Optional, an Array of succesfully declarated Ticket Objects.
+     * @param {Object} [drawObj] Optional, a Draw Object, composed by at least a property and an Array opf Numbers as its Value.
      */
-    constructor(...ticketObj) {
-        this.#tickets = ticketObj;
+    constructor(tickets = [], drawObj = {}) {
+        this.tickets = tickets;
+        this.drawResults = (Object.keys(drawObj).length >= 1) ? drawObj : {};
+        this.prizeObj = {};
+        this.#doneDraw = (Object.keys(drawObj).length >= 1) ? true : false;
+        this.#doneCheckPrize = false;
+        this.#hasWinningTickets = false;
     }
     
-    #draw = draw;
-    #printDraw = printDraw;
-    #lottoDrawAsyncQ = drawQuestion;
+    #printCheckPrize = printWin;
+    #prizeCalculator = prizeCalculator;
+    #mainMenuAsyncQ = mainMenu;
+    /** Ticket Generation Async Questions */
+    #betAmountQ = betAmountQuestion;
     #nOfTicketsAsyncQ = nOfTickets;
     #typeOfTicketAsyncQ = typeOfTicket;
     #numbersToPlayAsyncQ = ticketNumbers;
     #citiesTicketAsyncQ = citiesTicket;
+    /** End of Ticket Generation Async Questions */
 
     /**
-     * The main Method of the Class. Checks, with a question, if the user has already passed in any Ticket Object.
-     * If the answer is positive, the method then proceed to ask the User if he would like to print into the console his Tickets,
-     * calling the `.#printTickets` private method.
-     * If the answer is negative, the method use the `.#ticketGenerator()` private method, to generate Ticket Objects,
-     * then ask the User if he would like to print into the console his Tickets, calling the `.#printTickets` private method.
-     * @returns 
+     * Async method used to open the Lotto Game CLI, entirely built on Prompts. The User can easily see what he/she can do with its own Ticket.
+     * The CLI prompts changes dynamically according to what the User has alredy done. Choosing `Exit` will close the software.
+     * If the User declarated the LottoGame Object without any Tickets, the software will ask him/she to `buy` some, up to 5.
+     * Uses a `while` loop to check the User answer.
+     * @async
      */
     async start(){
-        console.log('\x1b[30m\x1b[47m%s\x1b[0m', `LOTTO`);
-        const startQuestion = await this.#startQuestion();
+        if (this.tickets.length === 0)  {
+            this.tickets = await this.#ticketGenerator();
+        };
 
-        if ((startQuestion === true) && (this.#tickets.length >= 1)) {
-            const printedTickets = await this.#printTickets(this.#tickets);      
-            console.log(printedTickets);
+        let menuResponse;
+        while (menuResponse !== `exit`) {
+            menuResponse = await this.#mainMenuAsyncQ(this.tickets.length, this.#doneDraw, this.#doneCheckPrize, this.#hasWinningTickets);
 
-            const drawQuestion = await this.#lottoDrawAsyncQ();
-            if (drawQuestion === true) {
-                const draw = await this.#draw(this.#tickets);
-                const drawString = await this.#printDraw(draw);
-                console.log(drawString);
-                return draw;
-            } else {
-                console.log(`You chose to not participate in the Lotto Draw!`);
-                return this.#tickets;
+            if (menuResponse === `draw`) {
+                this.doDraw();
+            } else if (menuResponse === `printTickets`) {
+                console.log(this.printTickets());
+            } else if (menuResponse === `checkWin`) {
+                this.checkWin()
+            } else if (menuResponse === `printDraw`) {
+                console.log(this.printDraw());
+            } else if (menuResponse === `printWin`) {
+                console.log(this.printCheckWinResults())
             };
-        } else {
-            console.log(`It seems like you don't have any Lotto Tickets!`);
-            const tickets = await this.#ticketGenerator();
-            const printedTickets = await this.#printTickets(tickets);
-            console.log(printedTickets);
+        };
+    }
 
-            const drawQuestion = await this.#lottoDrawAsyncQ();
-            if (drawQuestion === true) {
-                const draw = await this.#draw(tickets);
-                const drawString = await this.#printDraw(draw);
-                console.log(drawString);
-                return draw;
-            } else {
-                console.log(`You chose to not participate in the Lotto Draw!`);
-                return tickets;
-            }
+    /**
+     * Checks for Tickets passed into the LottoGame Object. If there is at least one Ticket, proceeds printing it 
+     * using the `.print()` Ticket method.
+     * @returns {String} Returns an ASCII representation String of the Tickets generated.
+     */
+    printTickets() {
+        if (this.tickets.length === 0)  throw new Error(`You don't any any Lotto Tickets! Try declaring your Lotto Game with some Tickets, or use the '.start' method to generate some!`);
+
+        let outputString = ``;
+        for (const ticket of this.tickets) {
+            outputString += ticket.print() +`\n`;
         }
+
+        return outputString;
     }
-
-    /**
-     * Allow the user to partecipate in a draw with his own Lotto Tickets.
-     * Require that the LottoGame Object applied has been declared with Ticket Objects passed in the Constructor. 
-     * @returns {Promise<string>} Returns a String containing the results of the Draw and possible winning Tickets.
-     */
-    async partecipateDraw() {
-        const tickets = this.#tickets;
-
-        if (this.#tickets.length === 0) throw new TypeError(`It seems like you don't have any Lotto Tickets! Please, buy a Ticket and try again!`);
-
-        const draw = await this.#draw(tickets);
-        const drawString = await this.#printDraw(draw);
-
-        console.log(drawString);
-        return drawString;
-    }
-
-    /**
-     * Built on `prompts`. The first question the software asks to the User. If the User has already passed into 
-     * the Class Constructor one or more Ticket Objects, the method returns true, otherwise it returns false.
-     * @returns {Promise<Boolean>} Returns a Promise that, once fullfilled, returns a Boolean value.
-     */
-    async #startQuestion() {
-        const question = await prompts([
-            {
-                type: 'select',
-                name: 'choice',
-                message: `Have you already bought any Lotto Ticket?`,
-                choices: [
-                { title: 'Yes', value: true},
-                { title: 'No', value: false}
-                ],
-                onRender(kleur) {
-                    // @ts-ignore
-                    this.msg = kleur.green(`Have you already bought any Lotto Ticket?`);
-                }
-            }]);
-        
-        return question.choice;
-    };
     
     /**
-     * This method uses a bunch of imported utils functions, to help the user to generate new Ticket Objects.
-     * The first thing the method does is to ask the User how many Tickets he would like to generate (buy) (.#nOfTicketAsyncQ()).
-     * The it, through a for loop statement, asks the User on what type of winning combination (.#typeOfTicketAsyncQ()),
-     * on how many numbers (.#numbersToPlayAsyncQ()) and on which `Ruote` (.#citiesTicketAsyncQ()) he would like to place the bet on, 
-     * as many times as the Tickets he'd like to buy, up to 5 Tickets.
-     * @returns {Promise<Array<Object>>} Returns a Promise that, once fullfilled, returns an Array of Ticket Objects.
+     * Generates a new Draw Object. It's possible to use the Draw Object generated to check for winning Tickets. The Object declared is 
+     * automatically set as value of the `this.drawResults` property.
+     * @returns {Object}
+     */
+    doDraw() {
+        const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+        this.drawResults = draw;
+        this.#doneDraw = true;
+        return draw;
+    }
+
+    /**
+     * Checks if a Draw has already been generated or passed as argument of the Constructor, then proceeds to print it 
+     * using its own `.print()` method.
+     * @returns {String} Returns an ASCII decorated String containing details about the declared Draw Object.
+     */
+    printDraw() {
+        if ((this.#doneDraw === true) && (Object.keys(this.drawResults).length >= 1)) {
+            return this.drawResults?.print();
+        } else {
+            throw new Error(`You have not yet partecipated to a Draw! Try using '.doDraw()' first!`)
+        };
+    }
+
+    /**
+     * Check for valid Tickets in the `this.tickets` Array, and for a valid Draw Object declarated as value of the `this.drawresults`, then
+     * calls the `prize.calculator()` Function to check for winning Tickets. Updates the `this.#doneCheckPrize` property and the `this.#hasWinningTickets`,
+     * if there is at least one winning Ticket. Set the function results as value of the `this.#prizeObj` property.
+     * @returns {Object} The results of the `prize.calculator` function. 
+     */
+    checkWin() {
+        if ((this.#doneDraw === false) && (Object.keys(this.drawResults).length === 0)) throw new Error(`You have not yet partecipated to a Draw! Try using '.doDraw()' first!`);
+        if (this.tickets.length === 0) throw new Error(`You don't have any Tickets!`);
+
+        const winCheckResults = this.#prizeCalculator(this.drawResults, this.tickets);
+        this.#doneCheckPrize = true;
+        this.prizeObj = winCheckResults;
+
+        if((winCheckResults.winningTickets.length >= 1) && (winCheckResults.totalAmountWon > 0)) {
+            this.#hasWinningTickets = true;
+        };
+
+        return winCheckResults;
+    }
+
+    /**
+     * If the User has already checked for winning Tickets, he/she can print the results using this method.
+     * @returns {String} A nice ASCII representation of the `prize.calculator` Function results.
+     */
+    printCheckWinResults () {
+        if (this.#doneCheckPrize === false || Object.keys(this.prizeObj).length === 0) throw new Error(`You have not checked for winning Tickets yet! Try using '.checkWin()' first!`);
+        
+        const outputString = this.#printCheckPrize(this.prizeObj);
+        return outputString;
+    }
+
+    /**
+     * Uses several helper Functions builts on Prompts to help the User generating new Ticket Objects.
+     * @async
+     * @returns{Promise<Array<Object>>} Returns a Promise, that once fulfilled, returns an Array of Ticket Objects.
      */
     async #ticketGenerator() {
         const numberOfTickets = await this.#nOfTicketsAsyncQ();
@@ -140,49 +165,16 @@ class LottoGame {
         
         for (let i = 0;  i < numberOfTickets; i++) {
             console.log('\x1b[30m\x1b[47m%s\x1b[0m', ` Ticket #${i + 1} `)
+            const betAmount = await this.#betAmountQ();
             const typeOfTicket = await this.#typeOfTicketAsyncQ();
             const numbers = await this.#numbersToPlayAsyncQ(typeOfTicket);
             const cities = await this.#citiesTicketAsyncQ();
             
             // @ts-ignore
-            tickets.push(new Ticket(typeOfTicket, numbers, cities));
-        };
-        
-        return tickets;
-    }
-    
-    /**
-     * This method is used in the .start method to print a nice ASCII representation of the Ticket Objects passed as argument.
-     * Asks the User if he would like to see his own Tickets, using `prompts`.
-     * @param {Array<Object>} ticketsList An Array of Ticket Objects.
-     * @returns {Promise<String>} Returns a Promise that, if fullfilled, returns the printed Tickets as String, otherwise returns a String containing an Error message.
-     */
-    async #printTickets(ticketsList) {
-        const question = await prompts([
-            {
-                type: 'select',
-                name: 'choice',
-                message: `Would you like to see your Tickets?`,
-                choices: [
-                { title: 'Yes', value: true},
-                { title: 'No', value: false}
-                ],
-                onRender(kleur) {
-                    // @ts-ignore
-                    this.msg = kleur.green(`Would you like to see your Tickets?`);
-                }
-            }]);
-    
-        if (question.choice === false){
-            return (`You chose to not see your Tickets.`);
+            tickets.push(new Ticket(typeOfTicket, numbers, cities, betAmount));
         };
 
-        const ticketsStringList = [];
-        ticketsList.forEach(ticketObj => {
-            ticketsStringList.push(ticketObj.print());
-        });
-        
-        return ticketsStringList.join(`\n`); 
+        return tickets;
     }
 }
 
