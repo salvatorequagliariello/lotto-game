@@ -1,72 +1,134 @@
-const prompts = require('prompts');
-const nOfTickets = require(`../src/utils/q-number-of-tickets`);
-const ticketNumbers = require(`../src/utils/q-numbers`);
-const typeOfTicket = require(`../src/utils/q-type-of-ticket`);
-const citiesTicket = require(`../src/utils/q-cities`);
+const LottoDraw = require('../src/lotto-draw');
 const LottoGame = require(`../src/lotto-game`);
-const Ticket = require(`../src/ticket`);
-
+const Ticket = require('../src/ticket');
 
 describe(`LottoGame - UnitTests`, () => {
-    test(`test_type_of_ticket_question`, async () => {
-        prompts.inject(`Ambo`);
-        const typeOfTicketData = await typeOfTicket();
-        const expected = `Ambo`;
-        expect(typeOfTicketData).toBe(expected);
+    test(`test_lottoGame_declaration_with_ticket`, async () => {
+        const ticket = new Ticket(`ambata`, 2, `tutte`, 1);
+        const lotto = new LottoGame([ticket]);
+        expect(lotto.tickets.length).toBe(1);
+        expect(lotto.tickets[0]).toEqual(ticket);
     })
 
-    test(`test_number_of_tickets_question`, async () => {
-        prompts.inject(2);
-        const nOfTicketsData = await nOfTickets();
-        const expected = 2;
-        expect(nOfTicketsData).toBe(expected);
-    })
-    
-    test(`test_ticket_numbers_question`, async () => {
-        prompts.inject(`4`)
-        const numbers = await ticketNumbers(`terno`);
-        const expected = `4`;
-        expect(numbers).toBe(expected);
+    test(`test_lottoGame_declaration_with_multiple_tickets`, () => {
+        const ticket = new Ticket(`ambata`, 2, `tutte`, 1);
+        const ticketTwo = new Ticket(`ambo`, 6, `roma, firenze`, 2);
+        const lotto = new LottoGame([ticket, ticketTwo]);
+        expect(lotto.tickets.length).toBe(2);
+        expect(lotto.tickets[0]).toEqual(ticket);
+        expect(lotto.tickets[1]).toEqual(ticketTwo);
     })
 
-    test(`test_ruota_selection`, async () => {
-        prompts.inject([false, [`firenze, venezia, napoli`]]);
-        const citiesSelectedData = await citiesTicket();
-        const expected = `firenze, venezia, napoli`;
-        expect(citiesSelectedData).toBe(expected);
+    test(`test_lottoGame_declaration_with_ticket_and_Draw`, () => {
+        const ticket = new Ticket(`ambata`, 2, `tutte`, 1);
+        const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+        const lotto = new LottoGame([ticket], draw);
+        expect(lotto.tickets.length).toBe(1);
+        expect(lotto.tickets[0]).toEqual(ticket);
+        expect(lotto.drawResults).toEqual(draw);
     })
 
-    test(`test_tutte_ruote`, async () => {
-        prompts.inject(true);
-        const citiesSelectedData = await citiesTicket();
-        const expected = `Tutte`;
-        expect(citiesSelectedData).toBe(expected);
+    test(`test_lottoGame_returnTypeOf_printTickets`, () => {
+        const ticket = new Ticket(`ambata`, 2, `tutte`, 1);
+        ticket.numbers = [70, 40];
+        ticket.id = 9944;
+        const lotto = new LottoGame([ticket]);
+        expect(typeof lotto.printTickets()).toBe(`string`);
+        const expectedString = `████████████████████████████████████████████████████████
+█                                                      █
+█  L O T T O                        BIGLIETTO N. 9944  █
+█══════════════════════════════════════════════════════█
+█                                                      █
+█  NUMERI GIOCATI                                      █
+█  70 - 40                                             █
+█                                                      █
+█  RUOTE GIOCATE                                       █
+█  BARI - CAGLIARI - FIRENZE - GENOVA - MILANO         █
+█  NAPOLI - PALERMO - ROMA - TORINO - VENEZIA          █
+█                                                      █
+█  IMPORTO GIOCATA                                 €1  █
+█                                                      █
+█══════════════════════════════════════════════════════█
+█                                                      █
+█  SORTE                                       AMBATA  █
+█                                                      █
+████████████████████████████████████████████████████████
+`;
+        expect(lotto.printTickets()).toBe(expectedString);
     })
 
-    test(`test_guided_ticket_creation`, async () => {
-        const lottoGame = new LottoGame();
-        prompts.inject([false, 1, `ambo`, 3, false, [`roma, firenze`]]);
-        const tickets = await lottoGame.start();
-        const firstTicket = tickets[0];
-        expect(typeof firstTicket).toBe(`object`);
-        expect(firstTicket.cities).toContain(`roma`, `firenze`);
-        expect(firstTicket.numbers).toHaveLength(3);
-        expect(typeof firstTicket.type).toBe(`object`);
-        expect(firstTicket.type[`bill`]).toBe(`ambo`);
-        expect(firstTicket.type[`winningNumbers`]).toBe(2);
+    test(`test_lottoGame_print_draw`, () => {
+        const ticket = new Ticket(`ambata`, 2, `tutte`, 1);
+        const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 1, 1);
+        const lotto = new LottoGame([ticket], draw);
+        expect(lotto.drawResults).toEqual(draw);
+        const expectedString = `███████████████████████████████████████████████████
+█                                                 █
+█  L O T T O                          Estrazione  █
+█═════════════════════════════════════════════════█
+█                                                 █
+█  BARI                        1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  CAGLIARI                    1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  FIRENZE                     1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  GENOVA                      1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  MILANO                      1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  NAPOLI                      1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  PALERMO                     1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  ROMA                        1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  TORINO                      1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█  VENEZIA                     1 - 1 - 1 - 1 - 1  █
+█━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━█
+█                                                 █
+█                                                 █
+███████████████████████████████████████████████████
+`;
+        expect(typeof lotto.printDraw()).toBe(`string`);
+    })  
+
+    test(`test_lottoGame_prizeCalculator_results`, () => {
+        const ticket = new Ticket(`ambata`, 2, `tutte`, 1);
+        const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+        const lotto = new LottoGame([ticket], draw);
+        const prizeResults = lotto.checkWin();
+        expect(lotto.prizeObj).toEqual(prizeResults);
+        expect(lotto.prizeObj).toHaveProperty(`totalAmountWon`);
+        expect(lotto.prizeObj).toHaveProperty(`winningTickets`);
     })
 
-    test(`test_game_declaration_with_ticket_obj`, async () => {
-        const ticket = new Ticket(`quaterna`, 7, `tutte`);
-        const lottoGame = new LottoGame(ticket);
-        prompts.inject(true, false);
-        const gameIstance = await lottoGame.start()
-        const firstTicket = gameIstance[0];
-        expect(typeof firstTicket).toBe(`object`);
-        expect(firstTicket.cities).toContain(`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`);
-        expect(firstTicket.numbers).toHaveLength(7);
-        expect(typeof firstTicket.type).toBe(`object`);
-        expect(firstTicket.type[`bill`]).toBe(`quaterna`);
-        expect(firstTicket.type[`winningNumbers`]).toBe(4);
-    })
+    test(`test_lottoGame_print_checkWin_results`, () => {
+        const ticket = new Ticket(`cinquina`, 5, `roma`, 1);
+        const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+        const lotto = new LottoGame([ticket], draw);
+        lotto.checkWin();
+        const checkWinResults = lotto.printCheckWinResults();
+        const expectedString = `██████████████████████████████████████████████████
+█                                                █
+█                   L O T T O                    █
+█════════════════════════════════════════════════█
+█                                                █
+█  Non hai vinto. :(                             █
+█                                                █
+█                                                █
+██████████████████████████████████████████████████`;
+        expect(typeof checkWinResults).toEqual(`string`);
+        expect(checkWinResults).toEqual(expectedString);
+    }) 
 });
