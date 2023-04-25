@@ -5,6 +5,8 @@ A **NodeJS CLI Lottery App**, based on the **Italian Lotto®** System. The App i
 - [Some information about Lotto](https://github.com/salvatorequagliariello/lotto-game#some-information-about-lotto--slot_machine)
 - [More about the project](https://github.com/salvatorequagliariello/lotto-game#more-about-the-project-floppy_disk)
   - [The Ticket Class](https://github.com/salvatorequagliariello/lotto-game#the-ticket-class)
+  - [The LottoDraw Class](https://github.com/salvatorequagliariello/lotto-game#the-lottodraw-class)
+  - [The PrizeCalculator Function](https://github.com/salvatorequagliariello/lotto-game#the-prizecalculator-function)
   - [The LottoGame Class](https://github.com/salvatorequagliariello/lotto-game#the-lottogame-class)
 ---
 ## Some information about Lotto  :slot_machine:
@@ -54,14 +56,14 @@ console.log(ticket.print());
 <br>
 <br>
 ### The LottoDraw Class
-Class that allows the User to create new Draw Objects. A Draw Object mimics the functioning of a real draw, by using its properties as `Ruote` and a set of numbers as their own values.
+Class that allows the User to create new Draw Objects. A Draw Object mimics the functioning of a real lottery draw, by using its properties as *Ruote* and a set of numbers as their own values.
 In order to grant the succesful creation of a Draw Object, it's required to declare it passing 4 arguments to the Contructor.
 ```javascript
 const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
 ```
 - The first parameter is the **`Ruote`** names. An *Array* of *Strings* whose elements will be used as propertis of the declared *Object*.
 
-- The second parameter is the number of drawn numbers per `Ruota`. It determines how many numbers will be drawn. **MUST** be a valid *Integer*.
+- The second parameter is the number of drawn numbers per *Ruote*. It determines how many numbers will be drawn. **MUST** be a valid *Integer*.
 
 - The third parameter is the MAX Number to be drawn. **MUST** be a valid *Integer*.
 
@@ -77,6 +79,48 @@ console.log(draw.print());
 <br>
 ### The PrizeCalculator Function
 Function that compare an Array of Tickets and a Draw Object to determine the presence of a Winning Combniantion, then calculates any prize according to the *Type* of tickets, the number of *Ruote* choosed, the played *Numbers* and the *Bet* amount (see *[The Ticket Class](https://github.com/salvatorequagliariello/lotto-game#the-ticket-class)* for further details).
+The Function returns a *Prize Object* containing details abount any win and any winning Tickets.
+```javascript
+const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+const ticket = new Ticket(`terno`, 5, `cagliari, milano, torino`, 1);
+const ticketTwo = new Ticket(`ambata`, 10, `tutte`, 10);
+const checkWin = prizeCalculator(draw, [ticket, ticketTwo]);
+console.log(checkWin);
+// Log:
+{
+  totalAmountWon: 1.12,
+  winningTickets: [
+    Ticket {
+      type: [Object],
+      numbers: [Array],
+      cities: [Array],
+      bet: 10,
+      id: 8112,
+      wonAmount: 1.12,
+      winningDetails: [Object]
+    }
+  ]
+}
+```
+A *Prize* Object is composed of two properties, `totalAmountWon` (set as 0 if there are no winning Tickets) and a `winningTickets` Array (set as *empty* if there are no winning Tickets) containing details about any possible winning Ticket.
+<br>
+<br>
+It's possible to print a nice ASCII decorated representation of a Prize Object using the `.printWin()` Function, located in the `./src/utils` folder.
+```javascript
+const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+const ticket = new Ticket(`terno`, 5, `cagliari, milano, torino`, 1);
+const ticketTwo = new Ticket(`ambata`, 10, `tutte`, 10);
+const checkWin = prizeCalculator(draw, [ticket, ticketTwo]);
+const niceAsciiString = printWin(checkWin);
+console.log(niceAsciiString);
+```
+![Schermata 2023-04-25 alle 14 30 05](https://user-images.githubusercontent.com/109867120/234276617-26175ca2-b65c-4e27-9c2e-243e43ec3d6a.png)
+<br>
+
+If there are no winning Tickets, the Function will return a different String.
+<br>
+<br>
+![Schermata 2023-04-25 alle 14 39 13](https://user-images.githubusercontent.com/109867120/234278656-68ac1f90-82fe-45d5-a15e-471fa55b8f0e.png)
 <br>
 <br>
 ### The LottoGame Class
@@ -84,18 +128,103 @@ Use this Class to create a new game instance.
 ```javascript
 const gameInstance = new LottoGame();
 ```
-All it takes to start the declared game instance is the call of the `.start()` method and the launch of the software in the terminal.
-```javascript
-const gameInstance = new LottoGame();
-gameInstance.start();
-```
-It's possible to initiate a game instance with your own Tickets (up to 5) and your own Draw, simply passing them as constructor arguments (the Ticket argument **MUST** be passed as an *Array*).
+It's possible to initiate a game instance with your own [Tickets](https://github.com/salvatorequagliariello/lotto-game#the-ticket-class) (up to 5) and your own [Draw](https://github.com/salvatorequagliariello/lotto-game#the-lottodraw-class), simply passing them as constructor arguments (the Ticket argument **MUST** be passed as an *Array*).
 ```javascript
 const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
 const ticket = new Ticket(`terno`, 5, `cagliari, milano, torino`, 1);
 const gameInstance = new LottoGame([ticket], draw);
+```
+There are several Methods you can use on your LottoGame Object.
+
+ - `.printTickets()` <br>
+   Can only be called if the LottoGame Object has been declared with almost a Ticket Object in the Contrusctor.
+   Uses the `.print()` Ticket Method on every Ticket Passed into the Contructor (see *[The Ticket Class](https://github.com/salvatorequagliariello/lotto-game#the-ticket-class)* for further details).
+   ```
+   const ticket = new Ticket(`terno`, 5, `cagliari, milano, torino`, 1);
+   const gameInstance = new LottoGame([ticket]);
+   const ticketString = gameInstance.printTickets();
+   console.log(ticketString);
+   ```
+   ![Schermata 2023-04-25 alle 15 03 01](https://user-images.githubusercontent.com/109867120/234284931-8901e44f-d079-4547-8e67-2bc011103fa9.png)
+ 
+ - `.doDraw()` <br>
+    Creates a [LottoDraw](https://github.com/salvatorequagliariello/lotto-game#the-lottodraw-class) Object and set it as a property of the LottoGame Object. If the LottoGame Object
+    has been declared passing a Draw Object in the Contructor, this will be **OVERRIDDEN**. The results can be seen using the `.drawResults` property. <br>
+    ```
+    const ticket = new Ticket(`terno`, 5, `cagliari, milano, torino`, 1);
+    const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+    const gameIstanceDrawResults = gameInstance.drawResults;
+    console.log(gameInstanceDrawResults);
+   
+   // Log:
+   LottoDraw {
+      bari: [ 53, 35, 6, 70, 28 ],
+      cagliari: [ 45, 64, 48, 86, 32 ],
+      firenze: [ 84, 28, 7, 34, 62 ],
+      genova: [ 11, 46, 90, 72, 32 ],
+      milano: [ 22, 47, 19, 36, 5 ],
+      napoli: [ 2, 47, 85, 1, 22 ],
+      palermo: [ 50, 89, 75, 27, 62 ],
+      roma: [ 37, 30, 74, 17, 74 ],
+      torino: [ 36, 72, 73, 26, 2 ],
+      venezia: [ 80, 33, 89, 41, 65 ]
+    }
+   ```
+   
+- `.printDraw()` <br>
+  Can only be called if the LottoGame Object has been declared with a Draw Object in the Contrusctor or if the `.doDraw()` method as already been called.
+  Uses the `.print()` method of the [LottoDraw](https://github.com/salvatorequagliariello/lotto-game#the-lottodraw-class) Class to print the Draw results.
+  ```
+  const ticket = new Ticket(`terno`, 5, `cagliari, milano, torino`, 1);
+  const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+  const gameInstanceDrawResultsString = gameInstance.printDraw();
+  console.log(gameInstanceDrawResultsString);
+  ```
+  ![Schermata 2023-04-25 alle 15 41 31](https://user-images.githubusercontent.com/109867120/234295464-901e9695-e62a-43ef-85cf-252dbb17e29c.png)
+
+- `.checkWin()` <br>
+  Can only be called if the LottoGame Object has been declared with a Draw Object (or if the `.doDraw()` method as already been called) and at least one Ticket Object in the Contrusctor.
+  Calls the [.prizeCalculator](https://github.com/salvatorequagliariello/lotto-game#the-prizecalculator-function) Function to compare the Tickets and the Draw and searh for winning numbers.
+  Returns a Prize Object and set it as value of the LottoGame Object `prizeObj` value.
+  ```
+  const ticket = new Ticket(`ambata`, 10, `tutte`, 1);
+  const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+  const gameInstance = new LottoGame([ticket], draw);
+  const gameIstanceCheckResults = gameInstance.checkWin();
+  console.log(gameIstanceCheckResults);
+  // Log: 
+  {
+  totalAmountWon: 0.11,
+  winningTickets: [
+    Ticket {
+      type: [Object],
+      numbers: [Array],
+      cities: [Array],
+      bet: 1,
+      id: 8735,
+      wonAmount: 0.11,
+      winningDetails: [Object]
+      }
+    ]
+  }
+  ```
+  
+- `.printCheckWinResults()` <br>
+  Can only be called after the `.checkWin()` Method. Uses the `printWin()` function to return a nice ACII representation of a Prize Object.
+  ```
+  const ticket = new Ticket(`ambata`, 10, `tutte`, 1);
+  const draw = new LottoDraw([`bari`, `cagliari`, `firenze`, `genova`, `milano`, `napoli`, `palermo`, `roma`, `torino`, `venezia`], 5, 90, 1);
+  const gameInstance = new LottoGame([ticket], draw);
+  const gameIstanceCheckResults = gameInstance.checkWin();
+  const gameIstanceCheckResultsString = gameInstance.printCheckWinResults();
+  console.log(gameIstanceCheckResultsString);
+  ```
+  ![Schermata 2023-04-25 alle 16 12 05](https://user-images.githubusercontent.com/109867120/234304062-d64e2e4b-3b2b-4df7-bd02-31b74538168f.png)
+
+
+All it takes to start the CLI of a declared game instance is the call of the `.start()` method and the launch of the software in the terminal.
+```javascript
+const gameInstance = new LottoGame();
 gameInstance.start();
 ```
-The Class is mainly composed by private methods that validate inputs and guarantee the proper functioning of the game instance.
-
 ------
